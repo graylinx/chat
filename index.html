@@ -1,0 +1,137 @@
+<html>
+<head>
+	<title>Chat</title>
+	<style>
+	body{
+		background-color: rgba(0, 255, 0, 0.3);
+	}
+	#registrate{
+	    width: 300px;
+	    height: 300px;
+	    margin-top: 1%;
+	    margin-left: 40%;
+	    margin-right: 40%;
+	    margin-bottom: 1%;
+	    border-style: solid;
+	    border-radius: 5em;
+	    text-align:center;
+	    background-color: yellow;
+	}
+
+	#contenedorChat{
+		display: none;
+	}
+
+	#chat{
+		background-color: rgba(125, 125, 125, 0.3);
+		border-radius: 2em;
+		width: 60%;
+		margin-left: 20%;
+    	margin-right: 20%;
+	}
+
+	#init{
+		background-color: rgba(0, 255, 0, 0.8);
+		border-radius: 2em;
+		width: 60%;
+		margin-left: 20%;
+    	margin-right: 20%;
+    	text-align:center;
+	}
+
+	#logout{
+		background-color: red;
+		border-radius: 2em;
+		width: 60%;
+		margin-left: 20%;
+    	margin-right: 20%;
+    	text-align:center;
+	}
+
+	#enviaMsj{
+		width: 60%;
+		margin-left: 20%;
+    	margin-right: 20%;
+	}
+	</style>
+</head>
+<body>
+	<div id="registrate">
+		<br>
+		<p id="nickCorrecto">Introduce tu nombre: </p>
+		<p id="nickErroneo"></p>
+		<form id="enviaNick">
+			<input syze="35" id="nick"></input>
+			<input type="submit"></input>
+		</form>
+		<br>
+		<br>
+		<h1>WELCOME CHAT URJC</h1>
+	</div>
+	<div id="contenedorChat">
+		<div id="init"></div>
+		<div id="chat"></div>
+		<div id="logout"></div>
+		<form id="enviaMsj">
+			<input size="35" id="msj"></input>
+			<input type="submit"></input>
+		</form>
+	</div>
+	<script src="http://code.jquery.com/jquery-latest.min.js"></script>
+	<script src="/socket.io/socket.io.js"></script>
+	<script>
+		jQuery(function($){
+			var socket = io.connect();
+			$registrate = $("#registrate");
+			$nickCorrecto =$("#nickCorrecto");
+			$nickErroneo = $("#nickErroneo");
+			$enviaNick = $("#enviaNick");
+			$nick = $("#nick");
+			$contenedorChat = $("#contenedorChat");
+			$chat = $("#chat");
+			$init =$("#init");
+			$logout = $("#logout");
+			$enviaMsj = $("#enviaMsj");
+			$msj = $('#msj');
+
+			$enviaNick.submit(function(e){
+				e.preventDefault();
+				//enviar init al server
+				socket.emit('init', $nick.val(), function(data){
+					if (data){
+						$registrate.hide();
+						$contenedorChat.show();
+					}else{
+						$nickCorrecto.hide();
+						$nickErroneo.html("El Nick es ERRONEO, Introduce tu nombre de nuevo:")
+					}
+				});
+			});
+
+			//recibe welcome del server
+			socket.on('welcome', function(nick){
+				$init.append("El user: "+ nick + " se ha conectado"+"<br/>");
+			});
+
+			$enviaMsj.submit(function(e){
+				e.preventDefault();
+				//enviamos writer al server
+				socket.emit('writer', $msj.val());
+				$msj.val('');
+			});
+
+			//recibe el send writer del server
+			socket.on('send writer', function(data){
+				$chat.append('<b>' + data.nick + ': </b>' + data.msg + "<br/>");
+			});
+
+			//recibe logout del server
+			socket.on('logout', function(data){
+				$logout.append("El user: "+ data + " se ha desconectado"+"<br/>");
+			})
+
+		});
+
+	</script>
+</body>
+</html>
